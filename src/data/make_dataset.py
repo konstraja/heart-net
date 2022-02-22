@@ -1,20 +1,32 @@
 # -*- coding: utf-8 -*-
+from typing import Callable
 import click
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
+from data_parsers import generate_skeleton_dataset
+
+def get_processor(dataset_type: str) -> Callable:
+    return {
+        'SKELETON': generate_skeleton_dataset
+    }[dataset_type]
 
 @click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
+@click.argument('input_filepath',  type=click.Path(exists=True))
 @click.argument('output_filepath', type=click.Path())
-def main(input_filepath, output_filepath):
+@click.argument('type', type=click.Choice(['SKELETON']))
+def main(input_filepath, output_filepath, type):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
 
+
+    logger.info(f"Creating H5 file for {type} dataset")
+    logger.info(f"Input data path: {input_filepath} Output folder: {output_filepath}")
+
+    get_processor(type)(input_filepath, output_filepath)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
